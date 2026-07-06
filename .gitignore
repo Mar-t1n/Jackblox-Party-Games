@@ -1,8 +1,14 @@
-# Project place file
-/jackblox-party-games.rbxlx
+# Roblox
+*.rbxl
+*.rbxlx
 
-# Roblox Studio lock files
-/*.rbxlx.lock
-/*.rbxl.lock
+# Aftman
+.aftman/
 
-sourcemap.json
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/settings.json
