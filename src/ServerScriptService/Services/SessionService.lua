@@ -42,8 +42,15 @@ local function broadcastSessionUpdate(session)
 	end
 end
 
-function SessionService.CreateSession(hostPlayer, gameType, rawRoomName)
+function SessionService.CreateSession(hostPlayer, gameType, rawRoomName, options)
+	options = options or {}
 	local sessionId = HttpService:GenerateGUID(false)
+
+	local maxPlayers = options.maxPlayers
+	if type(maxPlayers) ~= "number" then
+		maxPlayers = MAX_PLAYERS_DEFAULT
+	end
+	maxPlayers = math.clamp(math.floor(maxPlayers), 2, 8)
 
 	local session = {
 		sessionId = sessionId,
@@ -52,7 +59,8 @@ function SessionService.CreateSession(hostPlayer, gameType, rawRoomName)
 		roomName = filterRoomName(rawRoomName, hostPlayer),
 		gameType = gameType,
 		players = { hostPlayer },
-		maxPlayers = MAX_PLAYERS_DEFAULT,
+		maxPlayers = maxPlayers,
+		isPublic = options.isPublic ~= false,
 		status = "Waiting",
 		createdAt = os.time(),
 	}
@@ -69,8 +77,10 @@ end
 -- Session data with real player names, safe to send to clients in that session.
 function SessionService.GetPublicSession(session)
 	local playerNames = {}
+	local playerUserIds = {}
 	for _, p in session.players do
 		table.insert(playerNames, p.Name)
+		table.insert(playerUserIds, p.UserId)
 	end
 	return {
 		sessionId = session.sessionId,
@@ -79,6 +89,7 @@ function SessionService.GetPublicSession(session)
 		roomName = session.roomName,
 		gameType = session.gameType,
 		playerNames = playerNames,
+		playerUserIds = playerUserIds,
 		maxPlayers = session.maxPlayers,
 		status = session.status,
 	}
@@ -132,6 +143,9 @@ end
 function SessionService.GetPublicSessionList()
 	local list = {}
 	for _, session in activeSessions do
+		if not session.isPublic then
+			continue
+		end
 		table.insert(list, {
 			sessionId = session.sessionId,
 			hostName = session.hostName,

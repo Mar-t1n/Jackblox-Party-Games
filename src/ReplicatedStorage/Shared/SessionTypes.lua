@@ -6,6 +6,7 @@ export type GameSession = {
 	gameType: string,
 	players: {Player},
 	maxPlayers: number,
+	isPublic: boolean,
 	status: string,
 	createdAt: number,
 }
@@ -18,6 +19,7 @@ export type PublicSession = {
 	roomName: string,
 	gameType: string,
 	playerNames: {string},
+	playerUserIds: {number},
 	maxPlayers: number,
 	status: string,
 }

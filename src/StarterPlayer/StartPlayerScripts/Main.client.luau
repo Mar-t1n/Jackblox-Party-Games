@@ -23,21 +23,14 @@ local menu = MenuScreens.Build(UIKit)
 
 local lobby = LobbyScreens.Build(UIKit, SessionController, {
 	ModeSelect = menu.ModeSelect,
-	OnStartMatch = function()
-		-- TODO: once the server-authoritative round exists, this should tell
-		-- the server to start the match for everyone in the session instead
-		-- of only kicking off a local mock round for the host.
-		GameController.StartMockRound()
+	OnStartMatch = function(session)
+		GameController.StartMatch(session.sessionId)
 	end,
 })
 
 local roundUI = GameScreens.Build(UIKit, GameController, {
 	OnBackToLobby = function()
-		GameController.EndRound()
 		UIKit.SwitchTo(lobby.LobbiesBrowser)
-	end,
-	OnPlayAgain = function()
-		GameController.StartMockRound()
 	end,
 })
 
@@ -45,7 +38,7 @@ menu.PlayButton.MouseButton1Click:Connect(function()
 	UIKit.SwitchTo(menu.ModeSelect)
 end)
 
-menu.LobbiesButton.MouseButton1Click:Connect(function()
+menu.QuiplashButton.MouseButton1Click:Connect(function()
 	UIKit.SwitchTo(lobby.LobbiesBrowser)
 end)
 

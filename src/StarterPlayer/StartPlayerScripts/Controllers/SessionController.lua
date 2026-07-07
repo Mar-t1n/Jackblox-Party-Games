@@ -64,8 +64,8 @@ function SessionController.FetchSessions()
 	return {}
 end
 
-function SessionController.CreateSession(gameType, roomName)
-	Remotes.CreateSession:FireServer(gameType, roomName)
+function SessionController.CreateSession(gameType, roomName, options)
+	Remotes.CreateSession:FireServer(gameType, roomName, options)
 end
 
 function SessionController.JoinSession(sessionId)
