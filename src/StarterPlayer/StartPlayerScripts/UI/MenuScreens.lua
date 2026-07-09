@@ -131,6 +131,18 @@ local function buildLetterRow(UIKit, parent, letters, rowHeight, layoutOrder)
 	return row
 end
 
+local PLAY_BUTTON_IMAGE = "rbxassetid://102610732384018"
+local QUIPLASH_TEXT_IMAGE = "rbxassetid://91129047873757"
+
+-- Colored clay-tile backgrounds for the Select Game grid (green, blue, red,
+-- yellow), assigned one per game tile in grid order.
+local TILE_BACKGROUNDS = {
+	"rbxassetid://91655869603594",
+	"rbxassetid://110999833472269",
+	"rbxassetid://101195096206310",
+	"rbxassetid://126160846450133",
+}
+
 -- Scattered layout for the 6 mascot images: mix of corners/edges so the
 -- title and Play button in the middle stay clear.
 local MASCOT_LAYOUT = {
@@ -301,24 +313,44 @@ function MenuScreens.Build(UIKit)
 	gameGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	gameGridLayout.Parent = gameGrid
 
-	local function buildGameTile(name, subtitle, available, layoutOrder)
+	local function buildGameTile(name, subtitle, available, layoutOrder, nameImage)
 		local tile = Instance.new("Frame")
-		tile.BackgroundColor3 = Palette.CardBG
+		tile.BackgroundTransparency = 1
 		tile.BorderSizePixel = 0
 		tile.LayoutOrder = layoutOrder
 		tile.ZIndex = 6
 		tile.Parent = gameGrid
-		UIKit.AddCorner(tile, 16)
-		UIKit.AddStroke(tile, Palette.TextDark, 1, 0.9)
 
-		UIKit.CreateLabel({
-			Text = name,
-			Size = UDim2.fromScale(0.85, 0.18),
-			Position = UDim2.fromScale(0.5, 0.62),
-			TextColor = available and Palette.TextDark or Palette.TextMuted,
-			ZIndex = 7,
-			Parent = tile,
-		})
+		local tileBG = Instance.new("ImageLabel")
+		tileBG.Name = "TileBackground"
+		tileBG.Size = UDim2.fromScale(1, 1)
+		tileBG.BackgroundTransparency = 1
+		tileBG.Image = TILE_BACKGROUNDS[layoutOrder] or TILE_BACKGROUNDS[1]
+		tileBG.ScaleType = Enum.ScaleType.Stretch
+		tileBG.ImageColor3 = available and Color3.new(1, 1, 1) or Color3.new(0.6, 0.6, 0.6)
+		tileBG.ZIndex = 6
+		tileBG.Parent = tile
+
+		if nameImage then
+			local nameLabel = Instance.new("ImageLabel")
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.Size = UDim2.fromScale(0.75, 0.16)
+			nameLabel.Position = UDim2.fromScale(0.5, 0.62)
+			nameLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+			nameLabel.Image = nameImage
+			nameLabel.ScaleType = Enum.ScaleType.Fit
+			nameLabel.ZIndex = 7
+			nameLabel.Parent = tile
+		else
+			UIKit.CreateLabel({
+				Text = name,
+				Size = UDim2.fromScale(0.85, 0.18),
+				Position = UDim2.fromScale(0.5, 0.62),
+				TextColor = available and Palette.TextDark or Palette.TextMuted,
+				ZIndex = 7,
+				Parent = tile,
+			})
+		end
 
 		UIKit.CreateLabel({
 			Text = subtitle,
@@ -330,23 +362,43 @@ function MenuScreens.Build(UIKit)
 			Parent = tile,
 		})
 
-		local playTile = UIKit.CreateButton({
-			Text = available and "PLAY" or "SOON",
-			Size = UDim2.fromScale(0.7, 0.16),
-			Position = UDim2.fromScale(0.5, 0.9),
-			Color = available and Palette.Purple or Palette.Locked,
-			Radius = 10,
-			ZIndex = 7,
-			Parent = tile,
-		})
-		if not available then
+		local playTile
+		if available then
+			playTile = Instance.new("ImageButton")
+			playTile.Name = "PlayButton"
+			playTile.BackgroundTransparency = 1
+			playTile.Size = UDim2.fromScale(0.4, 0.18)
+			playTile.Position = UDim2.fromScale(0.5, 0.9)
+			playTile.AnchorPoint = Vector2.new(0.5, 0.5)
+			playTile.Image = PLAY_BUTTON_IMAGE
+			playTile.ScaleType = Enum.ScaleType.Fit
+			playTile.ZIndex = 7
+			playTile.Parent = tile
+
+			local baseSize = playTile.Size
+			playTile.MouseEnter:Connect(function()
+				TweenService:Create(playTile, TweenInfo.new(0.12), { Size = baseSize + UDim2.fromScale(0.03, 0.03) }):Play()
+			end)
+			playTile.MouseLeave:Connect(function()
+				TweenService:Create(playTile, TweenInfo.new(0.12), { Size = baseSize }):Play()
+			end)
+		else
+			playTile = UIKit.CreateButton({
+				Text = "SOON",
+				Size = UDim2.fromScale(0.7, 0.16),
+				Position = UDim2.fromScale(0.5, 0.9),
+				Color = Palette.Locked,
+				Radius = 10,
+				ZIndex = 7,
+				Parent = tile,
+			})
 			playTile.AutoButtonColor = false
 		end
 
 		return playTile
 	end
 
-	local quiplashTile = buildGameTile("Quiplash", "2 players, funniest answer wins", true, 1)
+	local quiplashTile = buildGameTile("Quiplash", "2 players, funniest answer wins", true, 1, QUIPLASH_TEXT_IMAGE)
 	buildGameTile("Trivia Clash", "Coming soon", false, 2)
 	buildGameTile("Draw It!", "Coming soon", false, 3)
 	buildGameTile("Word Bomb", "Coming soon", false, 4)
